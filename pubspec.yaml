@@ -21,3 +21,12 @@ flutter:
 
   assets:
     - assets/images/grocery+_logo.png
+    - assets/images/cheese.png
+    - assets/images/milk.png
+    - assets/images/chicken.png
+    - assets/images/egg.png
+    - assets/images/lettuce.png
+    - assets/images/tomato.png
+    - assets/images/alfredo.png
+    - assets/images/bell_peppers.png
+    - assets/images/chicken_salad.png
