@@ -35,7 +35,7 @@ class AppBarWithArrow extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
             Padding(padding: EdgeInsets.only(top:20),
-              child: Center(child: Image.asset('assets/images/logo.png', height: 60,),)
+              child: Center(child: Image.asset('assets/images/grocery+_logo.png', height: 60,),)
             )
           ],
         ),
