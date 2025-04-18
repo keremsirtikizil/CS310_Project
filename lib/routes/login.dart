@@ -3,6 +3,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:io' show Platform;
 import 'package:grocery_list/utils/AppColors.dart';
+import 'package:grocery_list/routes/loadingOverlay.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -148,8 +149,11 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   height: 45,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+
+                      await showLoadingTransition(context, durationMs: 1500);
                       if (_formKey.currentState!.validate()) {
+
                         print('Email $_email Password $_password');
                         Navigator.pushNamedAndRemoveUntil(context, "/home", (routes)=>false);
                         _formKey.currentState!.save();
