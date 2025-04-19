@@ -85,7 +85,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>{
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBarWithArrow(),
-      body: Column(
+      body: SingleChildScrollView(child:Column(
         children: [
           if(!showManualInput)
             Container(
@@ -237,6 +237,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>{
 
             )  
         ],
+      ),
       ), 
       
     );
