@@ -35,7 +35,8 @@ class HomePage extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Logo
@@ -125,6 +126,7 @@ class HomePage extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
 
