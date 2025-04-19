@@ -90,9 +90,9 @@ class _LoginPageState extends State<LoginPage> {
                       if(value.isEmpty){
                         return "Email can't be empty";
                       }
-                      
-                    } else if (!EmailValidator.validate(value!)) {
+                      else if (!EmailValidator.validate(value!)) {
                       return "Enter a valid email";
+                       }   
                     }
                     return null;
                   },
