@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:grocery_plus/utils/AppColors.dart';
-
+import 'package:grocery_list/utils/AppColors.dart';
+import 'package:grocery_list/utils/navbar.dart';
+import 'package:grocery_list/utils/appbar.dart';
 class ChecklistScreen extends StatefulWidget {
   const ChecklistScreen({super.key});
 
@@ -22,32 +23,15 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     {
       'name': 'Product List 3',
       'totalPrice': 22.99,
-    },
-    {
-      'name': 'Product List 4',
-      'totalPrice': 0.79,
-    },
+    }
+
   ];
 
   void _addNewList() {
     Navigator.pushNamed(context, '/add');
   }
 
-  void _onNavigationItemTapped(int index) {
-    switch (index) {
-      case 0: // Expenses
-        Navigator.pushNamed(context, '/expenses');
-        break;
-      case 1: // Add
-        break; // Already in add screen
-      case 2: // Items
-        Navigator.pushNamed(context, '/inventory');
-        break;
-      case 3: // Settings
-        Navigator.pushNamed(context, '/settings');
-        break;
-    }
-  }
+
 
   @override
   void dispose() {
@@ -57,6 +41,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBarWithArrow(),
       backgroundColor: AppColors.mainBackground,
       body: SafeArea(
         child: Padding(
@@ -92,7 +77,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                   minimumSize: const Size(double.infinity, 50),
                 ),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/add');
+                  Navigator.pushNamed(context, "/newListCreation");
                 },
                 child: const Text(
                   'Create New List',
@@ -188,32 +173,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.navbarColor,
-        selectedItemColor: AppColors.buttonColor,
-        unselectedItemColor: Colors.black54,
-        currentIndex: 1,
-        onTap: _onNavigationItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money),
-            label: 'Expenses',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            label: 'Add',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
-            label: 'Items',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
+      bottomNavigationBar: AppNavBar(currentIndex: 1)
     );
   }
 } 

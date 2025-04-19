@@ -1,78 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:grocery_plus/utils/AppColors.dart';
-
+import 'package:grocery_list/utils/AppColors.dart';
+import 'package:grocery_list/utils/navbar.dart';
+import 'package:grocery_list/utils/appBar.dart';
 class ExpensesScreen extends StatelessWidget {
   const ExpensesScreen({super.key});
 
-  void _onNavigationItemTapped(BuildContext context, int index) {
-    switch (index) {
-      case 0: // Expenses
-        break; // Already in expenses screen
-      case 1: // Add
-        Navigator.pushNamed(context, '/add');
-        break;
-      case 2: // Items
-        Navigator.pushNamed(context, '/inventory');
-        break;
-      case 3: // Settings
-        Navigator.pushNamed(context, '/settings');
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.mainBackground,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(70),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: AppColors.appBarColor,
-          elevation: 0,
-          flexibleSpace: Stack(
-            alignment: Alignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.black),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    const Expanded(
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image(
-                              image: AssetImage('assets/images/grocery+_logo.png'),
-                              height: 40,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Grocery+',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      appBar: AppBarWithArrow(),
       body: Column(
         children: [
           // Expenses title
@@ -301,32 +240,7 @@ class ExpensesScreen extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.navbarColor,
-        selectedItemColor: AppColors.buttonColor,
-        unselectedItemColor: Colors.black54,
-        currentIndex: 0,
-        onTap: (index) => _onNavigationItemTapped(context, index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money),
-            label: 'Expenses',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            label: 'Add',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
-            label: 'Items',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
+      bottomNavigationBar: AppNavBar(currentIndex: 0)
     );
   }
 } 

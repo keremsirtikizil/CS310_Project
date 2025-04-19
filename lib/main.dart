@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:grocery_list/routes/add.dart';
+import 'package:grocery_list/routes/checkListScreen.dart';
 import 'package:grocery_list/routes/home.dart';
 import 'package:grocery_list/routes/login.dart';
-import 'package:grocery_list/routes/financing.dart';
+import 'package:grocery_list/routes/expensesScreen.dart';
 import 'package:grocery_list/routes/inventory.dart';
 import 'package:grocery_list/routes/newListCreation.dart';
 import 'package:grocery_list/routes/settings.dart';
@@ -27,8 +27,8 @@ class MyApp extends StatelessWidget {
       initialRoute: "/login",
       routes: {"/login":(context)=>LoginPage(),
               "/home":(context)=>HomePage(),
-              "/financing":(context)=>FinancingPage(),
-              "/add":(context)=> AddPage(),
+              "/financing":(context)=>ExpensesScreen(),
+              "/add":(context)=> ChecklistScreen(),
               "/inventory":(context)=>InventoryPage(),
               "/settings":(context)=>SettingsPage(),
               "/forgotPassword":(context)=>forgotPassword(),
@@ -37,8 +37,6 @@ class MyApp extends StatelessWidget {
               "/barcode_scan": (context) => BarcodeScannerScreen(),
               "/product-details": (context) => ProductDetails(),
               "/recipes": (context) => RecipePage(),
-              
-
       },
 
     
