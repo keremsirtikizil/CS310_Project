@@ -34,3 +34,7 @@ flutter:
     - assets/images/alfredo.png
     - assets/images/bell_peppers.png
     - assets/images/chicken_salad.png
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf

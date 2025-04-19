@@ -25,6 +25,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Grocery+',
       initialRoute: "/login",
+      theme: ThemeData(
+        fontFamily: 'Poppins'
+      ),
       routes: {"/login":(context)=>LoginPage(),
               "/home":(context)=>HomePage(),
               "/financing":(context)=>ExpensesScreen(),
