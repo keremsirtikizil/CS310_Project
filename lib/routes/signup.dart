@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'dart:io' show Platform;
 import 'package:grocery_list/utils/AppColors.dart';
 import 'package:grocery_list/routes/loadingOverlay.dart';
-//import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class SignUp extends StatefulWidget {
@@ -300,25 +300,47 @@ class _SignUpState extends State<SignUp> {
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () async {
-                        await showLoadingTransition(context, durationMs: 1500);
-
-                        if (_formKey.currentState!.validate()) {
+                        if(_formKey.currentState!.validate()){
                           _formKey.currentState!.save();
+                          await showLoadingTransition(context,durationMs: 1000);
 
-                          // For debugging
-                          print('Name: $_fullName');
-                          print('Address: $_address');
-                          print('Email: $_email');
-                          print('Password: $_password');
+                          try{
+                            final auth = FirebaseAuth.instance;
+                            //try to create a user account here
+                            await auth.createUserWithEmailAndPassword(email: _email.trim(), password: _password.trim());
+                            
+                            //if successful -> navigate to login page
+                            if(mounted){
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: const Text("✅ Registration successful! Redirecting to login..."),
+                                backgroundColor: Colors.green,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 2),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                margin:  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                ),
+                              );
+                              await Future.delayed(const Duration(seconds: 2));
+                              Navigator.pushNamedAndRemoveUntil(context, '/login', (route)=>false);
+                            }
+                          }on FirebaseAuthException catch(e){
+                            String errorMsg = "Registration failed. Please try again.";
+                            if(e.code == 'email-already-in-use'){
+                              errorMsg = "This email is already in use.";
+                      
+                            }
+                            else if(e.code == 'invalid-email'){
+                              errorMsg = "Invalid email address.";
+                            }else if(e.code == 'weak-password'){
+                              errorMsg = "This password is too weak";
+                            }
+                            if(mounted){
+                              await _showErrorDialog("SignUp Error", errorMsg);
 
-                          // Navigate to login page after successful registration
-                          Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              "/login",
-                                  (routes) => false
-                          );
-                        } else {
-                          _showErrorDialog('Form Error', 'Please check your information');
+                            }
+                          }
+                        }else{
+                          await _showErrorDialog("Form Error", "Please check your information");
                         }
                       },
                       style: ElevatedButton.styleFrom(
