@@ -13,11 +13,11 @@ class ShoppingItem{
 
 
 Future<Map<String, dynamic>?> fetchProductInfo(String barcode) async {
-  final url = Uri.parse('https://api.upcitemdb.com/prod/trial/lookup?upc=$barcode');
+  final url = Uri.parse('https://api.upcitemdb.com/prod/trial/lookup?upc=$barcode'); // beforehand parsed uri
 
   try {
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
+    final response = await http.get(url); // here what I have done before learning.
+    if (response.statusCode == 200) { // status code == 200 check if successfully parsed
       final data = jsonDecode(response.body);
       if (data['items'] != null && data['items'].isNotEmpty) {
         return data['items'][0]; 

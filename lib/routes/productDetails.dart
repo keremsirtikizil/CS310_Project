@@ -1,13 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:grocery_list/utils/navbar.dart';
-class ShoppingItem{
-  String name;
-  double price;
-  String amount;
-  String expiry;
-  ShoppingItem(this.name, this.price, this.amount, this.expiry);
-}
+import 'package:grocery_list/routes/barcodeScannerScreen.dart';
+
+
 
 class AppBarWithArrow extends StatelessWidget implements PreferredSizeWidget {
   
@@ -136,6 +132,7 @@ class _ProductDetailsState extends State<ProductDetails>{
                 }else{
                   final newItem = ShoppingItem(title, price, amount , expiry);
                   Navigator.pop(context,newItem);
+
                 }
 
               },

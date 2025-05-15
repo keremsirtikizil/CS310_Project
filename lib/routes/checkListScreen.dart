@@ -13,22 +13,28 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
   double currentTotal = 33.76;
   List<Map<String, dynamic>> items = [
     {
-      'name': 'Product List 1',
+      'name': 'Shopping List 1',
       'totalPrice': 2.99,
     },
     {
-      'name': 'Product List 2',
+      'name': 'Shopping List 2',
       'totalPrice': 6.99,
     },
     {
-      'name': 'Product List 3',
+      'name': 'Shopping List 3',
       'totalPrice': 22.99,
     }
 
   ];
 
-  void _addNewList() {
-    Navigator.pushNamed(context, '/add');
+  //this is probably now working  -  -  -  -  - ;
+  void addNewItem(String name, double totalPrice) {
+    setState(() {
+      items.add({
+        'name': name,
+        'totalPrice': totalPrice,
+      });
+    });
   }
 
 
@@ -76,8 +82,18 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
                   backgroundColor: AppColors.buttonColor,
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                onPressed: () {
-                  Navigator.pushNamed(context, "/newListCreation");
+                onPressed: () async{
+                  final result = await Navigator.pushNamed(context, "/newListCreation");
+                  if(result != null && result is Map<String, dynamic>){
+                    setState(() {
+                      items.add(result);
+                      currentTotal = items.fold(
+                        0, 
+                        (sum,item) => sum + (item['totalPrice'] as double),
+                      );
+                    });
+                  }
+                  
                 },
                 child: const Text(
                   'Create New List',

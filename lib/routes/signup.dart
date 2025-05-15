@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'dart:io' show Platform;
 import 'package:grocery_list/utils/AppColors.dart';
 import 'package:grocery_list/routes/loadingOverlay.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
+
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});

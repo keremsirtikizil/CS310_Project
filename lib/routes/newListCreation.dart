@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_list/utils/navbar.dart';
 import 'package:grocery_list/routes/barcodeScannerScreen.dart';
-
-
+//import 'package:grocery_list/routes/checkListScreen.dart';
 
 class NewListCreation extends StatelessWidget{
   const NewListCreation({super.key});
@@ -150,6 +149,16 @@ class _ShoppingListState extends State<ShoppingList>{
           ElevatedButton(
             onPressed: () {
               // go the the page that all lists are present
+              // HERE IS TO BE USED
+              Navigator.pop(context, {'name': 'Shopping List ${DateTime.now().microsecondsSinceEpoch}',
+              'totalPrice': totalPrice,
+              'items': items.map((item)=> {
+                'name': "NewList",
+                'price': item.price,
+                'amount': item.amount,
+                'expiry': item.expiry,
+              }).toList(),
+              });
 
             },
             style: ElevatedButton.styleFrom(

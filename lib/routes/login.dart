@@ -4,7 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'dart:io' show Platform;
 import 'package:grocery_list/utils/AppColors.dart';
 import 'package:grocery_list/routes/loadingOverlay.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+final FirebaseAuth _auth = FirebaseAuth.instance;
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -90,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                       if(value.isEmpty){
                         return "Email can't be empty";
                       }
-                      else if (!EmailValidator.validate(value!)) {
+                      else if (!EmailValidator.validate(value)) {
                       return "Enter a valid email";
                        }   
                     }
@@ -150,17 +152,35 @@ class _LoginPageState extends State<LoginPage> {
                   height: 45,
                   child: ElevatedButton(
                     onPressed: () async {
-
-                      await showLoadingTransition(context, durationMs: 1500);
-                      if (_formKey.currentState!.validate()) {
-
-                        print('Email $_email Password $_password');
-                        Navigator.pushNamedAndRemoveUntil(context, "/home", (routes)=>false);
+                      if(_formKey.currentState!.validate()){
                         _formKey.currentState!.save();
+                        await showLoadingTransition(context,durationMs: 1000);
+                        
+                        try{
+                          await _auth.signInWithEmailAndPassword(email: _email.trim(), password: _password.trim());
+                          // navigate only if login succeeds
+                          if(mounted){
+                          Navigator.pushNamedAndRemoveUntil(context, '/home',(routes)=>false);
+                          }
+                        } 
+                        on FirebaseAuthException catch (e){
+                          print("Firebase error code: ${e.code}");
+                          String message = "Login failed. Please try again.";
+                          if(e.code == 'user-not-found'){
+                            message = "No user found for this email.";
+                          }else if(e.code == 'wrong-password' || e.code == 'invalid-credential'){
+                            message = "Incorrect e-mail password combination.";
+                          }
+                          if(mounted){
+                            await _showErrorDialog("Login Error", message);
+                          }
+                        }
+                        
 
-                      }
-                      else {
-                        _showErrorDialog('Form Error', 'Your form is invalid');
+                      }else{
+                        
+                        await _showErrorDialog('Form Error', 'Your form is invalid');
+                        
                       }
                     },
                     style: ElevatedButton.styleFrom(

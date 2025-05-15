@@ -11,8 +11,19 @@ import 'package:grocery_list/routes/signup.dart';
 import 'package:grocery_list/routes/forgotpassword.dart';
 import 'package:grocery_list/routes/productDetails.dart';
 import 'package:grocery_list/routes/recipes.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+//import 'package:firebase_analytics/observer.dart';
 
-void main() {
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+// We do not know what to do with this, maybe add some fancy features to application.
+
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
