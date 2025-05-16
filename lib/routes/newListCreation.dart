@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:grocery_list/utils/navbar.dart';
 import 'package:grocery_list/routes/barcodeScannerScreen.dart';
 //import 'package:grocery_list/routes/checkListScreen.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class NewListCreation extends StatelessWidget{
   const NewListCreation({super.key});
   @override
@@ -147,19 +148,34 @@ class _ShoppingListState extends State<ShoppingList>{
           ),
           const SizedBox(height: 8,),
           ElevatedButton(
-            onPressed: () {
-              // go the the page that all lists are present
-              // HERE IS TO BE USED
-              Navigator.pop(context, {'name': 'Shopping List ${DateTime.now().microsecondsSinceEpoch}',
-              'totalPrice': totalPrice,
-              'items': items.map((item)=> {
-                'name': "NewList",
-                'price': item.price,
-                'amount': item.amount,
-                'expiry': item.expiry,
-              }).toList(),
-              });
+            onPressed: () async{
+              
+                final uid = FirebaseAuth.instance.currentUser?.uid;
+                if (uid == null) return;
 
+                final listName = "Shopping List ${DateTime.now().microsecondsSinceEpoch}";
+
+                final shoppingData = {
+                  'userId': uid,
+                  'name': listName,
+                  'totalPrice': totalPrice,
+                  'items': items.map((item) => {
+                    'name': item.name,
+                    'price': item.price,
+                    'amount': item.amount,
+                    'expiry': item.expiry,
+                  }).toList(),
+                  'createdAt': FieldValue.serverTimestamp(),
+                };
+
+                final docRef = await FirebaseFirestore.instance
+                    .collection('shoppingLists')
+                    .add(shoppingData);
+
+                final savedDoc = await docRef.get();
+
+                Navigator.pop(context, savedDoc.data());
+              
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 164, 226, 167),
