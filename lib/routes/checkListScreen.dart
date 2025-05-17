@@ -4,6 +4,7 @@ import 'package:grocery_list/utils/navbar.dart';
 import 'package:grocery_list/utils/appbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:grocery_list/routes/shoppingListDetailsScreen.dart';
 
 class ChecklistScreen extends StatefulWidget {
   const ChecklistScreen({super.key});
@@ -13,7 +14,6 @@ class ChecklistScreen extends StatefulWidget {
 }
 
 class _ChecklistScreenState extends State<ChecklistScreen> {
-  
   double currentTotal = 0.0;
   List<Map<String, dynamic>> items = [];
 
@@ -23,32 +23,88 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     loadShoppingLists();
   }
 
-  // ✅ Load all shopping lists from Firestore
-Future<void> loadShoppingLists() async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) return;
+  Future<void> loadShoppingLists() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
 
-  final snapshot = await FirebaseFirestore.instance
-      .collection('shoppingLists')
-      .where('userId', isEqualTo: uid)
-      .get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('shoppingLists')
+        .where('userId', isEqualTo: uid)
+        .get();
 
-  final loadedItems = snapshot.docs.map((doc) {
-    final data = doc.data();
-    return {
-      'id': doc.id, 
-      'name': data['name'] ?? 'Unnamed List',
-      'totalPrice': (data['totalPrice'] ?? 0).toDouble(),
-    };
-  }).toList();
+    final loadedItems = snapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'id': doc.id,
+        'name': data['name'] ?? 'Unnamed List',
+        'totalPrice': (data['totalPrice'] ?? 0).toDouble(),
+        'items': data['items'] ?? [],
+      };
+    }).toList();
 
-  double total = loadedItems.fold(0, (sum, item) => sum + item['totalPrice']);
+    double total = loadedItems.fold(0, (sum, item) => sum + item['totalPrice']);
 
-  setState(() {
-    items = loadedItems;
-    currentTotal = total;
-  });
-}
+    setState(() {
+      items = loadedItems;
+      currentTotal = total;
+    });
+  }
+
+  Future<void> markAsPurchased(Map<String, dynamic> item, int index) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm Purchase"),
+        content: const Text("Are you sure you want to mark this list as bought? This will move all items to your fridge."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Confirm"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final itemsList = item['items'] ?? [];
+    for (final product in itemsList) {
+      await FirebaseFirestore.instance
+          .collection('fridgeItems')
+          .doc(uid)
+          .collection('items')
+          .add({
+        ...product,
+        'purchasedAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await FirebaseFirestore.instance
+        .collection('shoppingLists')
+        .doc(item['id'])
+        .delete();
+
+    setState(() {
+      items.removeAt(index);
+      currentTotal = items.fold(0,
+          (sum, item) => sum + (item['totalPrice'] as num).toDouble());
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Items moved to fridge!"),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,28 +115,7 @@ Future<void> loadShoppingLists() async {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Shopping List',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(width: 48),
-                ],
-              ),
               const SizedBox(height: 20),
-
-              /// 🔘 Create New List Button
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.buttonColor,
@@ -88,21 +123,14 @@ Future<void> loadShoppingLists() async {
                 ),
                 onPressed: () async {
                   await Navigator.pushNamed(context, "/newListCreation");
-
-                  
                   await loadShoppingLists();
                 },
                 child: const Text(
                   'Create New List',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
               const SizedBox(height: 20),
-
-              /// 🔘 Display Shopping Lists
               Expanded(
                 child: items.isEmpty
                     ? const Center(child: Text("No lists found."))
@@ -121,8 +149,7 @@ Future<void> loadShoppingLists() async {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         item['name'],
@@ -140,30 +167,43 @@ Future<void> loadShoppingLists() async {
                                   ),
                                 ),
                                 IconButton(
+                                  icon: const Icon(Icons.check_circle, color: Colors.green),
+                                  tooltip: "Mark as Bought",
+                                  onPressed: () => markAsPurchased(item, index),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.visibility),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ShoppingListDetailsScreen(
+                                          shoppingList: item,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                IconButton(
                                   icon: const Icon(Icons.delete),
-                                  onPressed: () async{
-                                    final docId = items[index]['id'];
-
-                                    // 1. Delete from Firestore
+                                  onPressed: () async {
+                                    final docId = item['id'];
                                     await FirebaseFirestore.instance
                                         .collection('shoppingLists')
                                         .doc(docId)
                                         .delete();
-
-                                    // 2. Remove from local list
                                     setState(() {
                                       items.removeAt(index);
                                       currentTotal = items.fold(
                                         0,
-                                        (sum, item) => sum + (item['totalPrice'] as num).toDouble(),
+                                        (sum, item) =>
+                                            sum + (item['totalPrice'] as num).toDouble(),
                                       );
                                     });
-
-                                    // Optional: feedback
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
+                                      const SnackBar(
                                         content: Text("Deleted list from server"),
-                                        duration: const Duration(seconds: 2),
+                                        duration: Duration(seconds: 2),
                                       ),
                                     );
                                   },
@@ -174,8 +214,6 @@ Future<void> loadShoppingLists() async {
                         },
                       ),
               ),
-
-              /// 🔘 Total
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -187,13 +225,11 @@ Future<void> loadShoppingLists() async {
                   children: [
                     const Text(
                       'Total:',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Text(
                       '\$${currentTotal.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -205,4 +241,4 @@ Future<void> loadShoppingLists() async {
       bottomNavigationBar: AppNavBar(currentIndex: 1),
     );
   }
-}
+} 
