@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:grocery_list/routes/checkListScreen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:provider/provider.dart';
+
+// Models & Services
+import 'model/user.dart';
+import 'services/auth.dart';
+
+// Routes (Screens)
 import 'package:grocery_list/routes/home.dart';
 import 'package:grocery_list/routes/login.dart';
 import 'package:grocery_list/routes/expensesScreen.dart';
@@ -11,15 +20,16 @@ import 'package:grocery_list/routes/signup.dart';
 import 'package:grocery_list/routes/forgotpassword.dart';
 import 'package:grocery_list/routes/productDetails.dart';
 import 'package:grocery_list/routes/recipes.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-//import 'package:firebase_analytics/observer.dart';
+import 'package:grocery_list/routes/checkListScreen.dart';
+import 'package:grocery_list/routes/wrapper.dart'; // NEW
+
+// Providers (State)
+import 'state/fridge_provider.dart';
+import 'state/shopping_list_provider.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-// We do not know what to do with this, maybe add some fancy features to application.
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -32,28 +42,43 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Grocery+',
-      initialRoute: "/login",
-      theme: ThemeData(
-        fontFamily: 'Poppins'
-      ),
-      routes: {"/login":(context)=>LoginPage(),
-              "/home":(context)=>HomePage(),
-              "/financing":(context)=>ExpensesScreen(),
-              "/add":(context)=> ChecklistScreen(),
-              "/inventory":(context)=>InventoryPage(),
-              "/settings":(context)=>SettingsPage(),
-              "/forgotPassword":(context)=>forgotPassword(),
-              "/signup":(context)=>SignUp(),
-              "/newListCreation": (context) => NewListCreation(),
-              "/barcode_scan": (context) => BarcodeScannerScreen(),
-              "/product-details": (context) => ProductDetails(),
-              "/recipes": (context) => RecipePage(),
-      },
+    return MultiProvider(
+      providers: [
+        // ✅ New: StreamProvider for auth
+        StreamProvider<MyUser?>.value(
+          value: AuthService().user,
+          initialData: null,
+        ),
 
-    
+        // ✅ Your existing state providers
+        ChangeNotifierProvider(create: (_) => FridgeProvider()),
+        ChangeNotifierProvider(create: (_) => ShoppingListProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Grocery+',
+        theme: ThemeData(fontFamily: 'Poppins'),
+
+        // ✅ Initial route now uses Wrapper to redirect based on login state
+        initialRoute: "/wrapper",
+
+        // ✅ Updated routes map
+        routes: {
+          "/wrapper": (context) => const Wrapper(),
+          "/login": (context) => LoginPage(),
+          "/signup": (context) => SignUp(),
+          "/forgotPassword": (context) => forgotPassword(),
+          "/home": (context) => HomePage(),
+          "/financing": (context) => ExpensesScreen(),
+          "/add": (context) => ChecklistScreen(),
+          "/inventory": (context) => InventoryPage(),
+          "/newListCreation": (context) => NewListCreation(),
+          "/barcode_scan": (context) => BarcodeScannerScreen(),
+          "/product-details": (context) => ProductDetails(),
+          "/settings": (context) => SettingsPage(),
+          "/recipes": (context) => RecipePage(),
+        },
+      ),
     );
   }
 }

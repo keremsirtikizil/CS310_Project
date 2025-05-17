@@ -2,67 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:grocery_list/utils/AppColors.dart';
 import 'package:grocery_list/utils/navbar.dart';
 import 'package:grocery_list/utils/appBar.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:grocery_list/state/fridge_provider.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Map<String, dynamic>> purchases = [];
-  double totalSpent = 0.0;
+  bool _isLoaded = false;
 
   @override
-  void initState() {
-    super.initState();
-    fetchRecentPurchases();
-  }
-
-  Future<void> fetchRecentPurchases() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    final oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
-
-    final snapshot = await FirebaseFirestore.instance
-        .collection('fridgeItems')
-        .doc(uid)
-        .collection('items')
-        .where('purchasedAt', isGreaterThanOrEqualTo: oneWeekAgo)
-        .orderBy('purchasedAt', descending: true)
-        .get();
-
-    final List<Map<String, dynamic>> fetched = snapshot.docs.map((doc) {
-      final data = doc.data();
-      final date = (data['purchasedAt'] as Timestamp?)?.toDate();
-      return {
-        'product': data['name'] ?? '-',
-        'price': "\$${(data['price'] ?? 0).toStringAsFixed(2)}",
-        'amount': data['amount'] ?? '-',
-        'date': date != null ? "${date.day}.${date.month}.${date.year}" : '-',
-      };
-    }).toList();
-
-    double total = 0;
-    for (final item in snapshot.docs) {
-      final data = item.data();
-      final price = (data['price'] ?? 0).toDouble();
-      final amount = double.tryParse(data['amount']?.toString() ?? '1') ?? 1;
-      total += price * amount;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isLoaded) {
+      final fridgeProvider = Provider.of<FridgeProvider>(context, listen: false);
+      fridgeProvider.loadRecentPurchases();
+      _isLoaded = true;
     }
-
-    setState(() {
-      purchases = fetched;
-      totalSpent = total;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final fridgeProvider = Provider.of<FridgeProvider>(context);
+
     return Scaffold(
       backgroundColor: AppColors.mainBackground,
       appBar: AppBarWithArrow(),
@@ -76,67 +42,52 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 10),
                 const Text(
                   "Welcome to Grocery+",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 30),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     "Recent Purchases",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                   decoration: BoxDecoration(
                     color: AppColors.boxColor,
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: const Row(
                     children: [
-                      Expanded(
-                          child: Text("Product Name",
-                              style: TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(
-                          child: Text("Price",
-                              style: TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(
-                          child: Text("Amount",
-                              style: TextStyle(fontWeight: FontWeight.bold))),
-                      Expanded(
-                          child: Text("Date",
-                              style: TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(child: Text("Product Name", style: TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(child: Text("Price", style: TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(child: Text("Amount", style: TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(child: Text("Purchase Date", style: TextStyle(fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...purchases.map(
-                  (item) => Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.boxColor,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(child: Text(item['product'] ?? '')),
-                        Expanded(child: Text(item['price'] ?? '')),
-                        Expanded(child: Text(item['amount'] ?? '')),
-                        Expanded(child: Text(item['date'] ?? '')),
-                      ],
-                    ),
-                  ),
-                ),
+
+                // Show recent purchases
+                ...fridgeProvider.recentPurchases.map((item) => Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.boxColor,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(child: Text(item['name'] ?? '')),
+                          Expanded(child: Text("${item['price']?.toStringAsFixed(2) ?? '0.00'}\$")),
+                          Expanded(child: Text(item['amount']?.toString() ?? '')),
+                          Expanded(child: Text(item['purchasedAt'] ?? '')),
+                        ],
+                      ),
+                    )),
+
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -146,11 +97,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Row(
                     children: [
-                      const Text(
-                        "Weekly Spending: ",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text("${totalSpent.toStringAsFixed(2)}\$"),
+                      const Text("Weekly Spending: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text("${fridgeProvider.weeklySpending.toStringAsFixed(2)}\$"),
                     ],
                   ),
                 ),

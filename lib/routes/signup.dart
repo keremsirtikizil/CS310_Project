@@ -20,7 +20,6 @@ class _SignUpState extends State<SignUp> {
   bool _obscureConfirmPassword = true;
 
   String _fullName = '';
-  String _address = '';
   String _email = '';
   String _password = '';
   String _confirmPassword = '';
