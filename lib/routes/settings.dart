@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:grocery_list/utils/AppColors.dart';
 import 'package:grocery_list/utils/navbar.dart';
 import 'package:grocery_list/utils/appBar.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
+
+  void _logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Logout failed: ${e.toString()}"),
+        ),
+      );
+    }
+  }
 
   Widget buildSettingTile(IconData icon, String label, VoidCallback onTap) {
     return InkWell(
@@ -42,7 +56,7 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.mainBackground,
       appBar: const AppBarWithArrow(),
-      body: SingleChildScrollView( // <—— BURASI YENİ
+      body: SingleChildScrollView(
         child: Column(
           children: [
             const SizedBox(height: 10),
@@ -71,7 +85,7 @@ class SettingsPage extends StatelessWidget {
                     buildSettingTile(Icons.remove_red_eye_outlined, "Appearance", () {}),
                     buildSettingTile(Icons.headphones_outlined, "Help & Support", () {}),
                     InkWell(
-                      onTap: () {},
+                      onTap: () => _logout(context),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                         child: Row(
@@ -100,4 +114,3 @@ class SettingsPage extends StatelessWidget {
     );
   }
 }
-

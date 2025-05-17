@@ -13,6 +13,7 @@ class ChecklistScreen extends StatefulWidget {
 }
 
 class _ChecklistScreenState extends State<ChecklistScreen> {
+  
   double currentTotal = 0.0;
   List<Map<String, dynamic>> items = [];
 
@@ -23,31 +24,31 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
   }
 
   // ✅ Load all shopping lists from Firestore
-  Future<void> loadShoppingLists() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+Future<void> loadShoppingLists() async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return;
 
-    // 🔧 Remove orderBy('createdAt') to prevent ignoring new docs with null timestamps
-    final snapshot = await FirebaseFirestore.instance
+  final snapshot = await FirebaseFirestore.instance
       .collection('shoppingLists')
       .where('userId', isEqualTo: uid)
       .get();
 
-    final list = snapshot.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id; // add the document ID to each item
-      return data;
-    }).toList();
+  final loadedItems = snapshot.docs.map((doc) {
+    final data = doc.data();
+    return {
+      'id': doc.id, 
+      'name': data['name'] ?? 'Unnamed List',
+      'totalPrice': (data['totalPrice'] ?? 0).toDouble(),
+    };
+  }).toList();
 
-    setState(() {
-      items = list;
-      currentTotal = list.fold(
-        0,
-        (sum, item) => sum + (item['totalPrice'] as num).toDouble(),
-      );
-    });
-  }
+  double total = loadedItems.fold(0, (sum, item) => sum + item['totalPrice']);
 
+  setState(() {
+    items = loadedItems;
+    currentTotal = total;
+  });
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(

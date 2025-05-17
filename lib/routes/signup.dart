@@ -137,35 +137,6 @@ class _SignUpState extends State<SignUp> {
                     },
                   ),
 
-                  const SizedBox(height: 20),
-
-                  // Address
-                  const Text(
-                    'Your address',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    decoration: InputDecoration(
-                      hintText: 'Baker St. 434/A',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your address';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      _address = value ?? '';
-                    },
-                  ),
 
                   const SizedBox(height: 20),
 

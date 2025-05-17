@@ -1,45 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_list/utils/navbar.dart';
 import 'package:grocery_list/routes/barcodeScannerScreen.dart';
-//import 'package:grocery_list/routes/checkListScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-class NewListCreation extends StatelessWidget{
+
+class NewListCreation extends StatelessWidget {
   const NewListCreation({super.key});
+
   @override
   Widget build(BuildContext context) {
-      return  const ShoppingList();
+    return const ShoppingList();
   }
 }
 
-class ShoppingList extends StatefulWidget{
+class ShoppingList extends StatefulWidget {
   const ShoppingList({super.key});
-  @override 
+
+  @override
   State<ShoppingList> createState() => _ShoppingListState();
 }
 
-class _ShoppingListState extends State<ShoppingList>{  
-  List<ShoppingItem> items = [
-    ShoppingItem("Milk", 2.99, "1.5L", "11.04.2025"),
-    ShoppingItem("Juice", 6.99, "1.0L", "14.05.2025"),
-    ShoppingItem("Tobacco", 22.99, "1", "14.05.2025"),
-    ShoppingItem("Apple", 0.79, "250g", "20.03.2025"),
-    ShoppingItem("Kerem", 100.09, "1025kg", "11.11.1111"),
-    ShoppingItem("Emirhan", 100.09, "1025kg", "11.11.1111"),
-    ShoppingItem("Ahmet", 100.09, "1025kg", "11.11.1111"),
-    ShoppingItem("Yiğit", 100.09, "1025kg", "11.11.1111"),
-    ShoppingItem("Pelin", 100.09, "1025kg", "11.11.1111"),
-    ShoppingItem("Burhan", 100.09, "1025kg", "11.11.1111"),
-  ];
+class _ShoppingListState extends State<ShoppingList> {
+  List<ShoppingItem> items = [];
+
   double get totalPrice {
-    return items.fold(0.0, (sum,item) => sum + item.price);
+    return items.fold(0.0, (sum, item) => sum + item.price);
   }
+
+  Future<String?> promptForListName(BuildContext context) async {
+    String tempName = "";
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Enter Shopping List Name"),
+        content: TextField(
+          autofocus: true,
+          onChanged: (value) => tempName = value,
+          decoration: const InputDecoration(hintText: "e.g. Weekend Groceries"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (tempName.trim().isNotEmpty) {
+                Navigator.pop(context, tempName.trim());
+              }
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarWithArrow(),
       body: Column(
         children: [
+          /// Header Banner
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             padding: const EdgeInsets.all(12),
@@ -48,30 +68,37 @@ class _ShoppingListState extends State<ShoppingList>{
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Center(
-              child: Text("Creating New List: USER_ENTERED_NAME", style: TextStyle(fontWeight: FontWeight.bold)),
-
+              child: Text(
+                "You're creating a new list.",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 16), 
+
+          /// Column Titles
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const[
+              children: const [
                 Text("Product Name", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("Price", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("Amount/Weight", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("Expiry Date", style: TextStyle(fontWeight: FontWeight.bold)),
               ],
-            )
+            ),
           ),
-          const SizedBox(height: 8,),
+          const SizedBox(height: 8),
+
+          /// List of items
           Expanded(
             child: ListView.builder(
               itemCount: items.length,
-              itemBuilder: (context, index){
+              itemBuilder: (context, index) {
                 final item = items[index];
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), 
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: Colors.green.shade200,
                     borderRadius: BorderRadius.circular(20),
@@ -89,39 +116,41 @@ class _ShoppingListState extends State<ShoppingList>{
                           final deletedItem = items[index];
                           final deletedIndex = index;
                           setState(() {
-                            items.removeAt(index); 
+                            items.removeAt(index);
                           });
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                            content: Text("Product: \"${deletedItem.name}\" is deleted.",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              )
+                              content: Text(
+                                "Product: \"${deletedItem.name}\" is deleted.",
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.grey.shade400,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              action: SnackBarAction(
+                                label: "UNDO",
+                                textColor: Colors.black,
+                                onPressed: () {
+                                  setState(() {
+                                    items.insert(deletedIndex, deletedItem);
+                                  });
+                                },
+                              ),
                             ),
-                            duration: const Duration(seconds: 2),
-                            behavior: SnackBarBehavior.floating,
-                            backgroundColor: Colors.grey.shade400,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            action: SnackBarAction(
-                              label: "UNDO",
-                              textColor: Colors.black,
-                              onPressed: (){
-                                setState(() {
-                                  items.insert(deletedIndex, deletedItem);
-                                });
-                              },
-                            ),
-                          ));
+                          );
                         },
                       ),
-                    ]
-                  )
+                    ],
+                  ),
                 );
-              }
+              },
             ),
           ),
+
+          /// Total price
           Container(
             padding: const EdgeInsets.all(12),
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -131,14 +160,17 @@ class _ShoppingListState extends State<ShoppingList>{
             ),
             child: Text("Current Total: ${totalPrice.toStringAsFixed(2)}\$"),
           ),
+
+          /// Add New Item Button
           ElevatedButton(
-            onPressed: () async {final result = await Navigator.pushNamed(context, '/barcode_scan');
-            if(result != null && result is ShoppingItem){
-              setState(() {
-                items.add(result);
-              });
-            }
-            }, // add new item screen navigate,
+            onPressed: () async {
+              final result = await Navigator.pushNamed(context, '/barcode_scan');
+              if (result != null && result is ShoppingItem) {
+                setState(() {
+                  items.add(result);
+                });
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 172, 219, 175),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -146,36 +178,36 @@ class _ShoppingListState extends State<ShoppingList>{
             ),
             child: const Text("Add New Item"),
           ),
-          const SizedBox(height: 8,),
+          const SizedBox(height: 8),
+
+          /// Save Shopping List Button
           ElevatedButton(
-            onPressed: () async{
-              
-                final uid = FirebaseAuth.instance.currentUser?.uid;
-                if (uid == null) return;
+            onPressed: () async {
+              final uid = FirebaseAuth.instance.currentUser?.uid;
+              if (uid == null) return;
 
-                final listName = "Shopping List ${DateTime.now().microsecondsSinceEpoch}";
+              final enteredName = await promptForListName(context);
+              if (enteredName == null) return;
 
-                final shoppingData = {
-                  'userId': uid,
-                  'name': listName,
-                  'totalPrice': totalPrice,
-                  'items': items.map((item) => {
-                    'name': item.name,
-                    'price': item.price,
-                    'amount': item.amount,
-                    'expiry': item.expiry,
-                  }).toList(),
-                  'createdAt': FieldValue.serverTimestamp(),
-                };
+              final shoppingData = {
+                'userId': uid,
+                'name': enteredName,
+                'totalPrice': totalPrice,
+                'items': items.map((item) => {
+                      'name': item.name,
+                      'price': item.price,
+                      'amount': item.amount,
+                      'expiry': item.expiry,
+                    }).toList(),
+                'createdAt': FieldValue.serverTimestamp(),
+              };
 
-                final docRef = await FirebaseFirestore.instance
-                    .collection('shoppingLists')
-                    .add(shoppingData);
+              final docRef = await FirebaseFirestore.instance
+                  .collection('shoppingLists')
+                  .add(shoppingData);
 
-                final savedDoc = await docRef.get();
-
-                Navigator.pop(context, savedDoc.data());
-              
+              final savedDoc = await docRef.get();
+              Navigator.pop(context, savedDoc.data());
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 164, 226, 167),
@@ -184,12 +216,10 @@ class _ShoppingListState extends State<ShoppingList>{
             ),
             child: const Text("Save The Shopping List"),
           ),
-          const SizedBox(height: 12,),
+          const SizedBox(height: 12),
         ],
-
       ),
       bottomNavigationBar: AppNavBar(currentIndex: 1),
     );
   }
 }
-
