@@ -44,13 +44,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // ✅ New: StreamProvider for auth
+        //  New: StreamProvider for auth
         StreamProvider<MyUser?>.value(
           value: AuthService().user,
           initialData: null,
         ),
 
-        // ✅ Your existing state providers
+        //  Your existing state providers
         ChangeNotifierProvider(create: (_) => FridgeProvider()),
         ChangeNotifierProvider(create: (_) => ShoppingListProvider()),
       ],
@@ -59,10 +59,10 @@ class MyApp extends StatelessWidget {
         title: 'Grocery+',
         theme: ThemeData(fontFamily: 'Poppins'),
 
-        // ✅ Initial route now uses Wrapper to redirect based on login state
+        //  Initial route now uses Wrapper to redirect based on login state
         initialRoute: "/wrapper",
 
-        // ✅ Updated routes map
+        //  Updated routes map
         routes: {
           "/wrapper": (context) => const Wrapper(),
           "/login": (context) => LoginPage(),
