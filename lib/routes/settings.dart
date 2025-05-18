@@ -60,7 +60,7 @@ class SettingsPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            Image.asset('assets/images/grocery+_logo.png', height: 60),
+            //Image.asset('assets/images/grocery+_logo.png', height: 60), no need we have it in appbar
             const SizedBox(height: 10),
             const Text(
               "Settings",
