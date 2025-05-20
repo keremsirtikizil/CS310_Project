@@ -22,6 +22,7 @@ import 'package:grocery_list/routes/productDetails.dart';
 import 'package:grocery_list/routes/recipes.dart';
 import 'package:grocery_list/routes/checkListScreen.dart';
 import 'package:grocery_list/routes/wrapper.dart'; // NEW
+import 'package:grocery_list/routes/change_password_screen.dart'; // NEW
 
 // Providers (State)
 import 'state/fridge_provider.dart';
@@ -77,6 +78,7 @@ class MyApp extends StatelessWidget {
           "/product-details": (context) => ProductDetails(),
           "/settings": (context) => SettingsPage(),
           "/recipes": (context) => RecipePage(),
+          '/change-password': (context) => ChangePasswordScreen(), // NEW
         },
       ),
     );
