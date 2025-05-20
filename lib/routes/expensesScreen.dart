@@ -3,30 +3,119 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:grocery_list/utils/AppColors.dart';
 import 'package:grocery_list/utils/navbar.dart';
 import 'package:grocery_list/utils/appBar.dart';
-class ExpensesScreen extends StatelessWidget {
+import 'package:provider/provider.dart';
+import 'package:grocery_list/state/fridge_provider.dart';
+import 'package:intl/intl.dart';
+
+class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
 
+  @override
+  State<ExpensesScreen> createState() => _ExpensesScreenState();
+}
+
+class _ExpensesScreenState extends State<ExpensesScreen> {
+  bool _isLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isLoaded) {
+      final fridgeProvider = Provider.of<FridgeProvider>(context, listen: false);
+      fridgeProvider.loadRecentPurchases();
+      _isLoaded = true;
+    }
+  }
+
+  DateTime _getStartOfWeek(DateTime date) {
+    return date.subtract(Duration(days: date.weekday - 1));
+  }
+
+  Map<String, double> _calculateDailySpending(List<Map<String, dynamic>> purchases) {
+    Map<String, double> dailySpending = {
+      'Mon': 0.0,
+      'Tue': 0.0,
+      'Wed': 0.0,
+      'Thu': 0.0,
+      'Fri': 0.0,
+      'Sat': 0.0,
+      'Sun': 0.0,
+    };
+
+    final now = DateTime.now();
+    final startOfWeek = _getStartOfWeek(now);
+    final endOfWeek = startOfWeek.add(const Duration(days: 7));
+
+    for (var purchase in purchases) {
+      final dateStr = purchase['purchasedAt'] as String;
+      if (dateStr.isNotEmpty) {
+        final date = DateFormat('dd.MM.yyyy').parse(dateStr);
+        
+        // Only include purchases from the current week
+        if (date.isAfter(startOfWeek.subtract(const Duration(days: 1))) && 
+            date.isBefore(endOfWeek)) {
+          final dayOfWeek = DateFormat('EEE').format(date);
+          final price = purchase['price'] as double;
+          final amountRaw = purchase['amount'];
+          final amount = amountRaw is num ? amountRaw : int.tryParse(amountRaw.toString()) ?? 1;
+          
+          dailySpending[dayOfWeek] = (dailySpending[dayOfWeek] ?? 0) + (price * amount);
+        }
+      }
+    }
+
+    return dailySpending;
+  }
+
+  double _calculateAverageSpending(Map<String, double> dailySpending) {
+    final total = dailySpending.values.fold(0.0, (sum, value) => sum + value);
+    final daysWithSpending = dailySpending.values.where((value) => value > 0).length;
+    return daysWithSpending > 0 ? total / daysWithSpending : 0;
+  }
+
+  String _getWeekRange() {
+    final now = DateTime.now();
+    final startOfWeek = _getStartOfWeek(now);
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+    
+    final dateFormat = DateFormat('MMM d');
+    return '${dateFormat.format(startOfWeek)} - ${dateFormat.format(endOfWeek)}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final fridgeProvider = Provider.of<FridgeProvider>(context);
+    final dailySpending = _calculateDailySpending(fridgeProvider.recentPurchases);
+    final averageSpending = _calculateAverageSpending(dailySpending);
+    final maxSpending = dailySpending.values.fold(0.0, (max, value) => value > max ? value : max);
+
     return Scaffold(
       backgroundColor: AppColors.mainBackground,
       appBar: AppBarWithArrow(),
       body: Column(
         children: [
-          // Expenses title
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Your expenses this week:',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+          // Expenses title with week range
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Your expenses this week:',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
-              ),
+                Text(
+                  _getWeekRange(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
             ),
           ),
           
@@ -42,43 +131,43 @@ class ExpensesScreen extends StatelessWidget {
                   centerSpaceRadius: 40,
                   sections: [
                     PieChartSectionData(
-                      value: 15, // Monday
+                      value: dailySpending['Mon'] ?? 0,
                       color: AppColors.boxColor.withOpacity(0.3),
                       title: 'Mon',
                       radius: 50,
                     ),
                     PieChartSectionData(
-                      value: 10, // Tuesday
+                      value: dailySpending['Tue'] ?? 0,
                       color: AppColors.boxColor.withOpacity(0.4),
                       title: 'Tue',
                       radius: 50,
                     ),
                     PieChartSectionData(
-                      value: 20, // Wednesday
+                      value: dailySpending['Wed'] ?? 0,
                       color: AppColors.boxColor.withOpacity(0.5),
                       title: 'Wed',
                       radius: 50,
                     ),
                     PieChartSectionData(
-                      value: 8, // Thursday
+                      value: dailySpending['Thu'] ?? 0,
                       color: AppColors.boxColor.withOpacity(0.6),
                       title: 'Thu',
                       radius: 50,
                     ),
                     PieChartSectionData(
-                      value: 25, // Friday
+                      value: dailySpending['Fri'] ?? 0,
                       color: AppColors.boxColor.withOpacity(0.7),
                       title: 'Fri',
                       radius: 50,
                     ),
                     PieChartSectionData(
-                      value: 30, // Saturday
+                      value: dailySpending['Sat'] ?? 0,
                       color: AppColors.boxColor.withOpacity(0.8),
                       title: 'Sat',
                       radius: 50,
                     ),
                     PieChartSectionData(
-                      value: 15, // Sunday
+                      value: dailySpending['Sun'] ?? 0,
                       color: AppColors.boxColor.withOpacity(0.9),
                       title: 'Sun',
                       radius: 50,
@@ -97,7 +186,7 @@ class ExpensesScreen extends StatelessWidget {
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
-                  maxY: 100,
+                  maxY: maxSpending * 1.2, // Add 20% padding
                   barTouchData: BarTouchData(enabled: false),
                   titlesData: FlTitlesData(
                     show: true,
@@ -122,7 +211,7 @@ class ExpensesScreen extends StatelessWidget {
                             style: const TextStyle(fontSize: 12),
                           );
                         },
-                        interval: 20,
+                        interval: maxSpending > 0 ? maxSpending / 5 : 20,
                       ),
                     ),
                     rightTitles: const AxisTitles(
@@ -139,7 +228,7 @@ class ExpensesScreen extends StatelessWidget {
                       x: 0,
                       barRods: [
                         BarChartRodData(
-                          toY: 45,
+                          toY: dailySpending['Mon'] ?? 0,
                           color: AppColors.boxColor,
                           width: 20,
                           borderRadius: BorderRadius.circular(4),
@@ -150,7 +239,7 @@ class ExpensesScreen extends StatelessWidget {
                       x: 1,
                       barRods: [
                         BarChartRodData(
-                          toY: 30,
+                          toY: dailySpending['Tue'] ?? 0,
                           color: AppColors.boxColor,
                           width: 20,
                           borderRadius: BorderRadius.circular(4),
@@ -161,7 +250,7 @@ class ExpensesScreen extends StatelessWidget {
                       x: 2,
                       barRods: [
                         BarChartRodData(
-                          toY: 60,
+                          toY: dailySpending['Wed'] ?? 0,
                           color: AppColors.boxColor,
                           width: 20,
                           borderRadius: BorderRadius.circular(4),
@@ -172,7 +261,7 @@ class ExpensesScreen extends StatelessWidget {
                       x: 3,
                       barRods: [
                         BarChartRodData(
-                          toY: 25,
+                          toY: dailySpending['Thu'] ?? 0,
                           color: AppColors.boxColor,
                           width: 20,
                           borderRadius: BorderRadius.circular(4),
@@ -183,7 +272,7 @@ class ExpensesScreen extends StatelessWidget {
                       x: 4,
                       barRods: [
                         BarChartRodData(
-                          toY: 80,
+                          toY: dailySpending['Fri'] ?? 0,
                           color: AppColors.boxColor,
                           width: 20,
                           borderRadius: BorderRadius.circular(4),
@@ -194,7 +283,7 @@ class ExpensesScreen extends StatelessWidget {
                       x: 5,
                       barRods: [
                         BarChartRodData(
-                          toY: 90,
+                          toY: dailySpending['Sat'] ?? 0,
                           color: AppColors.boxColor,
                           width: 20,
                           borderRadius: BorderRadius.circular(4),
@@ -205,7 +294,7 @@ class ExpensesScreen extends StatelessWidget {
                       x: 6,
                       barRods: [
                         BarChartRodData(
-                          toY: 50,
+                          toY: dailySpending['Sun'] ?? 0,
                           color: AppColors.boxColor,
                           width: 20,
                           borderRadius: BorderRadius.circular(4),
@@ -228,9 +317,9 @@ class ExpensesScreen extends StatelessWidget {
                 color: AppColors.boxColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text(
-                'Average dollars spent in a day: \$54.29',
-                style: TextStyle(
+              child: Text(
+                'Average dollars spent in a day: \$${averageSpending.toStringAsFixed(2)}',
+                style: const TextStyle(
                   color: Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
