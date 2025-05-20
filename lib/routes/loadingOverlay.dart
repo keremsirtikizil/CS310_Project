@@ -4,10 +4,16 @@ import 'package:flutter/material.dart';
 // This LoadingOverlay doesn't navigate anywhere - it just shows and dismisses itself
 class LoadingOverlay extends StatefulWidget {
   final int durationInMilliseconds;
+  final String? navigateTo;
+  final bool removeUntil;
+  final bool Function(Route<dynamic>)? predicate;
 
   const LoadingOverlay({
     Key? key,
-    this.durationInMilliseconds = 1000, // Default to 1 second
+    this.durationInMilliseconds = 1000,
+    this.navigateTo,
+    this.removeUntil = false,
+    this.predicate,
   }) : super(key: key);
 
   @override
@@ -25,13 +31,26 @@ class _LoadingOverlayState extends State<LoadingOverlay> with SingleTickerProvid
       duration: const Duration(seconds: 1),
     )..repeat();
 
-    // Just dismiss itself after the specified duration
+    // Dismiss and navigate after the specified duration
     Future.delayed(Duration(milliseconds: widget.durationInMilliseconds), () {
       if (mounted) {
-        Navigator.of(context).pop(); // Dismiss itself
+        Navigator.of(context).pop(); // Dismiss overlay
+
+        // Handle navigation if a route was provided
+        if (widget.navigateTo != null) {
+          if (widget.removeUntil) {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              widget.navigateTo!,
+              widget.predicate ?? (route) => false,
+            );
+          } else {
+            Navigator.of(context).pushNamed(widget.navigateTo!);
+          }
+        }
       }
     });
   }
+
 
   @override
   void dispose() {
@@ -123,17 +142,26 @@ class GroceryLoaderPainter extends CustomPainter {
   }
 }
 
-// Helper function that shows loading overlay and then executes navigation after delay
-Future<void> showLoadingTransition(BuildContext context, {int durationMs = 1000}) async {
+// Update the function to accept navigation parameters
+Future<void> showLoadingTransition(
+    BuildContext context, {
+      int durationMs = 1000,
+      String? navigateTo,
+      bool removeUntil = false,
+      bool Function(Route<dynamic>)? predicate,
+    }) async {
   // Show loading overlay
   await showDialog(
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {
-      return LoadingOverlay(durationInMilliseconds: durationMs);
+      return LoadingOverlay(
+        durationInMilliseconds: durationMs,
+        // Pass navigation info to the LoadingOverlay
+        navigateTo: navigateTo,
+        removeUntil: removeUntil,
+        predicate: predicate,
+      );
     },
   );
-
-  // When this line is reached, the loading overlay has been dismissed
-  // and any subsequent code will execute
 }
