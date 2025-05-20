@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:grocery_list/utils/AppColors.dart';
 import 'package:grocery_list/utils/appBar.dart';
@@ -11,50 +13,53 @@ class InventoryPage extends StatefulWidget {
 }
 
 class _InventoryPageState extends State<InventoryPage> {
-  final List<Map<String, dynamic>> items = [
-    {
-      'name': 'Milk',
-      'amount': '2 L',
-      'date': '22.03.2025',
-      'image': 'assets/images/milk.png', // network image
-      'statusColor': Color(0xFFBE0E0E),
-    },
-    {
-      'name': 'Egg',
-      'amount': '24 piece',
-      'date': '01.05.2025',
-      'image': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Egg.jpg/1280px-Egg.jpg',
-      'statusColor': Color(0xFF2C5F2D),
-    },
-    {
-      'name': 'Tomato',
-      'amount': '3 kg',
-      'date': '28.03.2025',
-      'image': 'https://upload.wikimedia.org/wikipedia/commons/8/88/Bright_red_tomato_and_cross_section02.jpg', // network image
-      'statusColor': Color(0xFFEB7B30),
-    },
-    {
-      'name': 'Cheese',
-      'amount': '2 piece',
-      'date': '21.05.2025',
-      'image': 'assets/images/cheese.png',
-      'statusColor': Color(0xFF2C5F2D),
-    },
-    {
-      'name': 'Lettuce',
-      'amount': '1 piece',
-      'date': '21.05.2025',
-      'image': 'assets/images/lettuce.png',
-      'statusColor': Color(0xFF2C5F2D),
-    },
-    {
-      'name': 'Chicken',
-      'amount': '1 piece',
-      'date': '19.04.2025',
-      'image': 'assets/images/chicken.png',
-      'statusColor': Color(0xFFBE0E0E),
-    },
-  ];
+
+  final User? user = FirebaseAuth.instance.currentUser;
+
+  late final Stream<QuerySnapshot> itemStream;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (user != null) {
+      itemStream = FirebaseFirestore.instance
+          .collection('fridgeItems')
+          .doc(user!.uid)
+          .collection('items')
+          .snapshots();
+    } else {
+    }
+  }
+
+  DateTime? parseExpiry(String? dateStr) {
+    if (dateStr == null) return null;
+    try {
+      final parts = dateStr.split('-');
+      return DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Color determineStatusColor(DateTime? expiryDate) {
+    if (expiryDate == null) return Colors.grey;
+    final today = DateTime.now();
+    final daysLeft = expiryDate.difference(today).inDays;
+
+    if (daysLeft <= 7) {
+      return const Color(0xFFBE0E0E);
+    } else if (daysLeft <= 12) {
+      return const Color(0xFFEB7B30);
+    } else {
+      return const Color(0xFF2C5F2D);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -189,71 +194,84 @@ class _InventoryPageState extends State<InventoryPage> {
                   ),
                   const SizedBox(height: 10),
                   Expanded(
-                    child: GridView.builder(
-                      itemCount: items.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 0.8,
-                      ),
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 5,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: itemStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return Center(child: Text("No items found."));
+                        }
+
+                        final docs = snapshot.data!.docs
+                            .where((doc) => doc['purchasedAt'] != null)
+                            .toList();
+
+                        if (docs.isEmpty) {
+                          return Center(child: Text("No purchased items in fridge."));
+                        }
+
+                        return GridView.builder(
+                          itemCount: docs.length,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.8,
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Align(
-                                alignment: Alignment.topRight,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 8.0),
-                                  child: CircleAvatar(
-                                    backgroundColor: item['statusColor'],
-                                    radius: 8,
+                          itemBuilder: (context, index) {
+                            final data = docs[index].data() as Map<String, dynamic>;
+                            final name = data['name'] ?? "Unnamed";
+                            final amount = data['amount'] ?? "-";
+                            final expiryStr = data['expiry'];
+                            final expiryDate = parseExpiry(expiryStr);
+                            final color = determineStatusColor(expiryDate);
+
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 2),
                                   ),
-                                ),
+                                ],
                               ),
-                              item['image'].toString().startsWith('http')
-                                  ? Image.network(
-                                      item['image'],
-                                      height: 128,
-                                      fit: BoxFit.contain,
-                                    )
-                                  : Image.asset(
-                                      item['image'],
-                                      height: 128,
-                                      fit: BoxFit.contain,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Align(
+                                    alignment: Alignment.topRight,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 8.0),
+                                      child: CircleAvatar(
+                                        backgroundColor: color,
+                                        radius: 8,
+                                      ),
                                     ),
-                              const SizedBox(height: 8),
-                              Text(
-                                item['name'],
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                  Image.asset(
+                                    'assets/images/default.png',
+                                    height: 128,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  Text(amount, style: const TextStyle(color: Colors.grey)),
+                                  Text(expiryStr ?? '-', style: const TextStyle(color: Colors.grey)),
+                                ],
                               ),
-                              Text(
-                                item['amount'],
-                                style: const TextStyle(color: Colors.grey),
-                              ),
-                              Text(
-                                item['date'],
-                                style: const TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
                     ),
-                  ),
+                  )
+
                 ],
               ),
             ),
