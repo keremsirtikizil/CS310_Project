@@ -40,7 +40,7 @@ class FridgeProvider extends ChangeNotifier {
       final price = item['price'] ?? 0.0;
       final amountRaw = item['amount'] ?? 1;
       final amount = amountRaw is num ? amountRaw : int.tryParse(amountRaw.toString()) ?? 1;
-      return sum + (price * amount);
+      return sum + (price);
     });
     notifyListeners();
   }

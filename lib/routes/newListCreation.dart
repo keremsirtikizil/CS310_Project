@@ -79,7 +79,7 @@ class _ShoppingListState extends State<ShoppingList> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: const [
                 Text("Product Name", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("Price", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -103,13 +103,43 @@ class _ShoppingListState extends State<ShoppingList> {
                     color: Colors.green.shade200,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child:Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(item.name),
-                      Text("${item.price}\$"),
-                      Text(item.amount),
-                      Text(item.expiry),
+                      Expanded(
+                        flex: 4,
+                        child: Center(
+                        child: Text(
+                          item.name,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 5,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        )
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          "${item.price}\$",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child:Center(
+                        child: Text(
+                          item.amount,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Center(
+                        child: Text(
+                          item.expiry,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),),
+                      ),
                       IconButton(
                         icon: const Icon(Icons.close),
                         onPressed: () {
