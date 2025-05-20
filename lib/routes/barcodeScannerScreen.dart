@@ -8,7 +8,8 @@ class ShoppingItem{
   double price;
   String amount;
   String expiry;
-  ShoppingItem(this.name, this.price, this.amount, this.expiry);
+  String category;
+  ShoppingItem(this.name, this.price, this.amount, this.expiry, this.category);
 }
 
 
