@@ -85,6 +85,7 @@ class _ShoppingListState extends State<ShoppingList> {
                 Text("Price", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("Amount/Weight", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("Expiry Date", style: TextStyle(fontWeight: FontWeight.bold)),
+
               ],
             ),
           ),
@@ -228,6 +229,7 @@ class _ShoppingListState extends State<ShoppingList> {
                       'price': item.price,
                       'amount': item.amount,
                       'expiry': item.expiry,
+                      'category': item.category,
                     }).toList(),
                 'createdAt': FieldValue.serverTimestamp(),
               };
