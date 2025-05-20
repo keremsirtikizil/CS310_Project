@@ -21,14 +21,13 @@ import 'package:grocery_list/routes/forgotpassword.dart';
 import 'package:grocery_list/routes/productDetails.dart';
 import 'package:grocery_list/routes/recipes.dart';
 import 'package:grocery_list/routes/checkListScreen.dart';
-import 'package:grocery_list/routes/wrapper.dart'; 
-import 'package:grocery_list/routes/change_password_screen.dart'; 
+import 'package:grocery_list/routes/wrapper.dart';
+import 'package:grocery_list/routes/change_password_screen.dart';
 
 // Providers (State)
 import 'state/fridge_provider.dart';
 import 'state/shopping_list_provider.dart';
 import 'state/auth_provider.dart';
-
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -47,39 +46,40 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        //  New: StreamProvider for auth
+        // 🔐 Auth state provider using stream
         StreamProvider<MyUser?>.value(
           value: AuthService().user,
           initialData: null,
+          catchError: (_, __) => null,
         ),
 
-        //  Your existing state providers
+        // 🧊 Other app state providers
         ChangeNotifierProvider(create: (_) => FridgeProvider()),
         ChangeNotifierProvider(create: (_) => ShoppingListProvider()),
-        ChangeNotifierProvider(create: (_) => AuthProvider())
-
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Grocery+',
         theme: ThemeData(fontFamily: 'Poppins'),
 
+        // 🌐 Auth-based wrapper is the root
         initialRoute: "/wrapper",
         routes: {
           "/wrapper": (context) => const Wrapper(),
-          "/login": (context) => LoginPage(),
-          "/signup": (context) => SignUp(),
-          "/forgotPassword": (context) => forgotPassword(),
-          "/home": (context) => HomePage(),
-          "/financing": (context) => ExpensesScreen(),
-          "/add": (context) => ChecklistScreen(),
-          "/inventory": (context) => InventoryPage(),
-          "/newListCreation": (context) => NewListCreation(),
-          "/barcode_scan": (context) => BarcodeScannerScreen(),
-          "/product-details": (context) => ProductDetails(),
-          "/settings": (context) => SettingsPage(),
-          "/recipes": (context) => RecipePage(),
-          '/change-password': (context) => ChangePasswordScreen(), // NEW
+          "/login": (context) => const LoginPage(),
+          "/signup": (context) => const SignUp(),
+          "/forgotPassword": (context) => const forgotPassword(),
+          "/home": (context) => const HomePage(),
+          "/financing": (context) => const ExpensesScreen(),
+          "/add": (context) => const ChecklistScreen(),
+          "/inventory": (context) => const InventoryPage(),
+          "/newListCreation": (context) => const NewListCreation(),
+          "/barcode_scan": (context) => const BarcodeScannerScreen(),
+          "/product-details": (context) => const ProductDetails(),
+          "/settings": (context) => const SettingsPage(),
+          "/recipes": (context) => const RecipePage(),
+          '/change-password': (context) => const ChangePasswordScreen(),
         },
       ),
     );
