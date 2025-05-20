@@ -31,6 +31,10 @@ flutter:
 
   assets:
     - assets/images/grocery+_logo.png
+    - assets/images/dairy.png
+    - assets/images/beverages.png
+    - assets/images/fruit-veg.png
+    - assets/images/meat-fish.png
     - assets/images/cheese.png
     - assets/images/milk.png
     - assets/images/chicken.png
