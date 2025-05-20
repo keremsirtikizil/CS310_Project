@@ -238,7 +238,7 @@ class _InventoryPageState extends State<InventoryPage> {
                           ),
                           itemBuilder: (context, index) {
                             final data = docs[index].data() as Map<String, dynamic>;
-                            final name = data['name'] ?? "Unnamed";
+                            final name = data['category'] ?? "Unnamed";
                             final amount = data['amount'] ?? "-";
                             final expiryStr = data['expiry'];
                             final expiryDate = parseExpiry(expiryStr);
