@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grocery_list/utils/AppColors.dart';
 import 'package:grocery_list/utils/appBar.dart';
 import 'package:grocery_list/utils/navbar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RecipePage extends StatefulWidget{
   const RecipePage({super.key});
@@ -12,41 +13,7 @@ class RecipePage extends StatefulWidget{
 
 class _RecipePageState extends State<RecipePage> {
 
-  final List<Map<String, dynamic>> recipes = [
-    {
-      'title': 'Chicken Salad',
-      'image': 'assets/images/chicken_salad.png',
-      'ingredients': [
-        {'name': 'Chicken breast', 'available': true},
-        {'name': 'Tomato', 'available': true},
-        {'name': 'Lettuce', 'available': true},
-        {'name': 'Olive oil', 'available': false},
-        {'name': 'Lemon juice', 'available': false},
-      ],
-    },
-    {
-      'title': 'Stuffed Bell Peppers',
-      'image': 'assets/images/bell_peppers.png',
-      'ingredients': [
-        {'name': 'Bell peppers', 'available': true},
-        {'name': 'Cooked rice', 'available': false},
-        {'name': 'Tomato paste', 'available': true},
-        {'name': 'Olive oil', 'available': false},
-        {'name': 'Ground chicken', 'available': true},
-      ],
-    },
-    {
-      'title': 'Chicken Alfredo Pasta',
-      'image': 'assets/images/alfredo.png',
-      'ingredients': [
-        {'name': 'Fettuccine pasta', 'available': true},
-        {'name': 'Chicken breast', 'available': true},
-        {'name': 'Heavy cream', 'available': true},
-        {'name': 'Garlic', 'available': true},
-        {'name': 'Parmesan cheese', 'available': false},
-      ],
-    },
-  ];
+  Stream<QuerySnapshot> recipeStream = FirebaseFirestore.instance.collection('recipelist').snapshots();
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +32,6 @@ class _RecipePageState extends State<RecipePage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 2),
-
                       Row(
                         children: [
                           IconButton(
@@ -133,67 +99,102 @@ class _RecipePageState extends State<RecipePage> {
 
                       const SizedBox(height: 10),
 
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: recipes.length,
-                      itemBuilder: (context, index) {
-                        final recipe = recipes[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 5,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  recipe['image'],
-                                  height: 140,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                recipe['title'],
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 6),
-                              ...recipe['ingredients'].map<Widget>((ingredient) {
-                                return Row(
-                                  children: [
-                                    const Text('\u2023 '),
-                                    Expanded(
-                                      child: Text(
-                                        ingredient['name'],
-                                        style: const TextStyle(fontSize: 12),
+                      Expanded(
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: recipeStream,
+                          builder: (context, snapshot) {
+
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Center(child: CircularProgressIndicator());
+                            }
+
+                            if (!snapshot.hasData) {
+                              return Center(child: Text("Loading..."));
+                            }
+
+                            final recipes = snapshot.data!.docs;
+
+                            return ListView.builder(
+                              itemCount: recipes.length,
+                              itemBuilder: (context, index) {
+                                final data = recipes[index].data()
+                                as Map<String, dynamic>;
+
+                                final List<dynamic> ingredientsRaw =
+                                    data['ingredients'] ?? [];
+
+                                final List<Map<String, dynamic>> ingredients =
+                                ingredientsRaw
+                                    .map((e) => Map<String, dynamic>.from(e))
+                                    .toList();
+
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(18),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 5,
+                                        offset: Offset(0, 2),
                                       ),
-                                    ),
-                                    Icon(
-                                      ingredient['available'] ? Icons.check_circle : Icons.cancel,
-                                      color: ingredient['available'] ? Colors.green : Colors.red,
-                                      size: 16,
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.asset(
+                                          'assets/images/${data['image']}',
+                                          height: 140,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        data['title'] ?? '',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      ...ingredients.map((ingredient) {
+                                        return Row(
+                                          children: [
+                                            Icon(Icons.circle, size: 6, color: Colors.black54),
+                                            Expanded(
+                                              child: Text(
+                                                ingredient['name'],
+                                                style:
+                                                const TextStyle(fontSize: 12),
+                                              ),
+                                            ),
+                                            Icon(
+                                              ingredient['available'] == true
+                                                  ? Icons.check_circle
+                                                  : Icons.cancel,
+                                              color:
+                                              ingredient['available'] == true
+                                                  ? Colors.green
+                                                  : Colors.red,
+                                              size: 16,
+                                            ),
+                                          ],
+                                        );
+                                      }).toList(),
+                                    ],
+                                  ),
                                 );
-                              }).toList(),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                              },
+                            );
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
