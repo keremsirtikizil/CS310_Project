@@ -53,6 +53,17 @@ class _ProductDetailsState extends State<ProductDetails>{
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _amountCountroller = TextEditingController();
+
+  String selectedCategory = 'Dairy';
+
+  final List<String> categoryOptions = [
+    'Dairy',
+    'Fruits & Vegetables',
+    'Meat & Fish',
+    'Beverages'
+  ];
+
+
   @override
   Widget build(BuildContext context){
     final args =  ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
@@ -87,11 +98,33 @@ class _ProductDetailsState extends State<ProductDetails>{
               decoration: const InputDecoration(labelText: "Please enter the amount", border: OutlineInputBorder()),
 
             ),
-            ElevatedButton(
+
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              decoration: const InputDecoration(
+                labelText: "Select a category",
+                border: OutlineInputBorder(),
+              ),
+              items: categoryOptions.map((category) {
+                return DropdownMenuItem<String>(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedCategory = value!;
+                });
+              },
+            ),
+
+        ElevatedButton(
               onPressed: () {
                 final double ? price  = double.parse(_priceController.text);
                 final String ? expiry = _dateController.text.trim();
                 final String  amount = _amountCountroller.text.trim();
+                final String category = selectedCategory;
+
                 if(price == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -130,7 +163,7 @@ class _ProductDetailsState extends State<ProductDetails>{
                   ));
 
                 }else{
-                  final newItem = ShoppingItem(title, price, amount , expiry);
+                  final newItem = ShoppingItem(title, price, amount , expiry, category);
                   Navigator.pop(context,newItem);
 
                 }
