@@ -60,6 +60,21 @@ class _InventoryPageState extends State<InventoryPage> {
     }
   }
 
+  String getCategoryImage(String category) {
+    switch (category) {
+      case 'Dairy':
+        return 'assets/images/dairy.png';
+      case 'Fruits & Vegetables':
+        return 'assets/images/fruit-veg.png';
+      case 'Meat & Fish':
+        return 'assets/images/meat-fish.png';
+      case 'Beverages':
+        return 'assets/images/beverages.png';
+      default:
+        return 'assets/images/dairy.png';
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -229,6 +244,9 @@ class _InventoryPageState extends State<InventoryPage> {
                             final expiryDate = parseExpiry(expiryStr);
                             final color = determineStatusColor(expiryDate);
 
+                            final category = data['category'] ?? 'Unknown';
+                            final imagePath = getCategoryImage(category);
+
                             return Container(
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -255,7 +273,7 @@ class _InventoryPageState extends State<InventoryPage> {
                                     ),
                                   ),
                                   Image.asset(
-                                    'assets/images/default.png',
+                                    imagePath,
                                     height: 128,
                                     fit: BoxFit.contain,
                                   ),
