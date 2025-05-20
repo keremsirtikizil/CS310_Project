@@ -60,8 +60,6 @@ class SettingsPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            //Image.asset('assets/images/grocery+_logo.png', height: 60), no need we have it in appbar
-            const SizedBox(height: 10),
             const Text(
               "Settings",
               style: TextStyle(
@@ -81,7 +79,9 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     buildSettingTile(Icons.person_outline, "Account", () {}),
                     buildSettingTile(Icons.notifications_none, "Notifications", () {}),
-                    buildSettingTile(Icons.lock_outline, "Privacy & Security", () {}),
+                    buildSettingTile(Icons.lock_outline, "Change Password", () {
+                      Navigator.pushNamed(context, '/change-password');
+                    }),
                     buildSettingTile(Icons.remove_red_eye_outlined, "Appearance", () {}),
                     buildSettingTile(Icons.headphones_outlined, "Help & Support", () {}),
                     InkWell(

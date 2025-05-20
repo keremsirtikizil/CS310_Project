@@ -21,12 +21,14 @@ import 'package:grocery_list/routes/forgotpassword.dart';
 import 'package:grocery_list/routes/productDetails.dart';
 import 'package:grocery_list/routes/recipes.dart';
 import 'package:grocery_list/routes/checkListScreen.dart';
-import 'package:grocery_list/routes/wrapper.dart'; // NEW
-import 'package:grocery_list/routes/change_password_screen.dart'; // NEW
+import 'package:grocery_list/routes/wrapper.dart'; 
+import 'package:grocery_list/routes/change_password_screen.dart'; 
 
 // Providers (State)
 import 'state/fridge_provider.dart';
 import 'state/shopping_list_provider.dart';
+import 'state/auth_provider.dart';
+
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -54,16 +56,15 @@ class MyApp extends StatelessWidget {
         //  Your existing state providers
         ChangeNotifierProvider(create: (_) => FridgeProvider()),
         ChangeNotifierProvider(create: (_) => ShoppingListProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider())
+
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Grocery+',
         theme: ThemeData(fontFamily: 'Poppins'),
 
-        //  Initial route now uses Wrapper to redirect based on login state
         initialRoute: "/wrapper",
-
-        //  Updated routes map
         routes: {
           "/wrapper": (context) => const Wrapper(),
           "/login": (context) => LoginPage(),
